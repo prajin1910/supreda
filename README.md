@@ -1,6 +1,6 @@
-# SmartEval Android Application
+# SmartEval Flutter Application
 
-A comprehensive Android application built with Kotlin and Jetpack Compose that mirrors the functionality of the SmartEval web application. This app provides AI-powered learning tools, assessment management, task tracking, and communication features for students, professors, and alumni.
+A comprehensive Flutter mobile application that mirrors the functionality of the SmartEval web application. This app provides AI-powered learning tools, assessment management, task tracking, and communication features for students, professors, and alumni.
 
 ## Features
 
@@ -17,7 +17,6 @@ A comprehensive Android application built with Kotlin and Jetpack Compose that m
 - **Assessment Management**: Create, assign, and monitor student assessments
 - **Alumni Management**: Review and approve alumni registration requests
 - **Chat**: Communicate with students and alumni
-- **Analytics**: View detailed assessment analytics and student performance
 
 ### For Alumni
 - **Dashboard**: Connect with students and share professional experience
@@ -25,93 +24,109 @@ A comprehensive Android application built with Kotlin and Jetpack Compose that m
 
 ## Technology Stack
 
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose
-- **Architecture**: MVVM with Repository Pattern
-- **Dependency Injection**: Hilt
-- **Networking**: Retrofit + OkHttp
-- **Local Storage**: DataStore Preferences
-- **Navigation**: Navigation Compose
-- **Async Operations**: Coroutines + Flow
-- **Backend**: Same Spring Boot backend with MongoDB
+- **Framework**: Flutter 3.0+
+- **Language**: Dart
+- **State Management**: Provider
+- **Navigation**: GoRouter
+- **HTTP Client**: Dio
+- **Local Storage**: SharedPreferences & SQLite
+- **Backend**: Java Spring Boot with MongoDB (same as web version)
 
 ## Project Structure
 
 ```
-app/
-├── src/main/java/com/smarteval/app/
-│   ├── data/
-│   │   ├── local/          # DataStore preferences
-│   │   ├── model/          # Data models
-│   │   ├── remote/         # API service interfaces
-│   │   └── repository/     # Repository implementations
-│   ├── di/                 # Dependency injection modules
-│   ├── presentation/       # UI layer
-│   │   ├── auth/          # Authentication screens
-│   │   ├── student/       # Student dashboard and features
-│   │   ├── professor/     # Professor dashboard and features
-│   │   ├── alumni/        # Alumni dashboard and features
-│   │   └── navigation/    # Navigation setup
-│   ├── ui/theme/          # Material Design theme
-│   └── utils/             # Utility classes
-└── build.gradle           # App-level dependencies
+lib/
+├── main.dart                 # App entry point
+├── models/                   # Data models
+│   ├── user.dart
+│   ├── assessment.dart
+│   ├── task.dart
+│   ├── chat.dart
+│   ├── ai.dart
+│   └── alumni.dart
+├── providers/                # State management
+│   ├── auth_provider.dart
+│   ├── assessment_provider.dart
+│   ├── task_provider.dart
+│   ├── chat_provider.dart
+│   ├── ai_provider.dart
+│   └── alumni_provider.dart
+├── screens/                  # Main screens
+│   ├── auth/
+│   ├── student/
+│   ├── professor/
+│   └── alumni/
+├── widgets/                  # Reusable widgets
+│   ├── student/
+│   ├── professor/
+│   ├── alumni/
+│   └── common/
+├── services/                 # API services
+│   └── api_service.dart
+└── utils/                    # Utilities
+    ├── theme.dart
+    ├── constants.dart
+    └── helpers.dart
 ```
 
 ## Setup Instructions
 
 ### Prerequisites
-- Android Studio Arctic Fox or later
-- JDK 8 or later
-- Android SDK API 24 or later
-- Running SmartEval backend server
+- Flutter SDK 3.0 or later
+- Dart SDK 3.0 or later
+- Android Studio / VS Code
+- Android SDK (for Android development)
+- Xcode (for iOS development, macOS only)
+- Running SmartEval Java backend server
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd smarteval-android
+   cd smarteval-flutter
    ```
 
-2. **Open in Android Studio**
-   - Open Android Studio
-   - Select "Open an existing project"
-   - Navigate to the cloned directory and select it
-
-3. **Configure Backend URL**
-   - Open `app/src/main/java/com/smarteval/app/di/NetworkModule.kt`
-   - Update the `BASE_URL` constant to point to your backend server:
-   ```kotlin
-   private const val BASE_URL = "http://your-backend-url:8080/api/"
+2. **Install dependencies**
+   ```bash
+   flutter pub get
    ```
-   - For local development with emulator, use: `http://10.0.2.2:8080/api/`
+
+3. **Generate model files**
+   ```bash
+   flutter packages pub run build_runner build
+   ```
+
+4. **Configure Backend URL**
+   - Open `lib/services/api_service.dart`
+   - Update the `baseUrl` constant to point to your backend server:
+   ```dart
+   static const String baseUrl = 'http://your-backend-url:8080/api';
+   ```
+   - For local development with emulator, use: `http://10.0.2.2:8080/api`
    - For physical device, use your computer's IP address
 
-4. **Sync Project**
-   - Click "Sync Now" when prompted
-   - Wait for Gradle sync to complete
-
-5. **Run the Application**
-   - Connect an Android device or start an emulator
-   - Click the "Run" button or press Ctrl+R
+5. **Run the application**
+   ```bash
+   flutter run
+   ```
 
 ## Key Components
 
 ### Authentication Flow
 - **Login/Register**: Complete user authentication with OTP verification
 - **Role-based Navigation**: Automatic routing based on user role
-- **Secure Token Storage**: JWT tokens stored securely using DataStore
+- **Secure Token Storage**: JWT tokens stored securely using SharedPreferences
 
 ### Data Layer
-- **Repository Pattern**: Clean separation between data sources and UI
-- **Retrofit Integration**: RESTful API communication with the backend
+- **Provider Pattern**: Clean state management with Provider
+- **Dio Integration**: RESTful API communication with the backend
 - **Local Caching**: User preferences and authentication data cached locally
 
 ### UI Layer
-- **Jetpack Compose**: Modern declarative UI framework
-- **Material Design 3**: Latest Material Design components and theming
+- **Material Design**: Modern Material Design 3 components
 - **Responsive Design**: Optimized for various screen sizes
-- **Navigation**: Type-safe navigation between screens
+- **Navigation**: Type-safe navigation with GoRouter
 
 ### Features Implementation
 
@@ -132,7 +147,7 @@ app/
 
 ## API Integration
 
-The app integrates with the same Spring Boot backend used by the web application:
+The app integrates with the same Java Spring Boot backend used by the web application:
 
 - **Authentication**: `/api/auth/*`
 - **Assessments**: `/api/assessments/*`
@@ -146,38 +161,68 @@ The app integrates with the same Spring Boot backend used by the web application
 - **JWT Authentication**: Secure token-based authentication
 - **Automatic Token Refresh**: Seamless session management
 - **Role-based Access Control**: Feature access based on user roles
-- **Secure Storage**: Sensitive data encrypted using Android Keystore
+- **Secure Storage**: Sensitive data stored using platform-specific secure storage
 
 ## Performance Optimizations
 
 - **Lazy Loading**: Efficient data loading with pagination
-- **Image Caching**: Optimized image loading and caching
-- **Background Processing**: Heavy operations performed on background threads
+- **State Management**: Optimized state updates with Provider
+- **Background Processing**: Heavy operations performed on background isolates
 - **Memory Management**: Proper lifecycle management to prevent memory leaks
 
 ## Testing
 
 The project includes:
-- **Unit Tests**: Repository and ViewModel testing
-- **Integration Tests**: API integration testing
-- **UI Tests**: Compose UI testing
+- **Unit Tests**: Provider and service testing
+- **Widget Tests**: UI component testing
+- **Integration Tests**: End-to-end testing
 
 Run tests using:
 ```bash
-./gradlew test
-./gradlew connectedAndroidTest
+flutter test
 ```
 
 ## Building for Release
 
-1. **Generate Signed APK**
-   - Build → Generate Signed Bundle/APK
-   - Select APK and follow the signing process
-
-2. **Build AAB for Play Store**
+### Android
+1. **Generate signed APK**
    ```bash
-   ./gradlew bundleRelease
+   flutter build apk --release
    ```
+
+2. **Generate App Bundle for Play Store**
+   ```bash
+   flutter build appbundle --release
+   ```
+
+### iOS
+1. **Build for iOS**
+   ```bash
+   flutter build ios --release
+   ```
+
+## Dependencies
+
+### Core Dependencies
+- `flutter`: Flutter SDK
+- `provider`: State management
+- `go_router`: Navigation
+- `dio`: HTTP client
+- `shared_preferences`: Local storage
+- `json_annotation`: JSON serialization
+
+### UI Dependencies
+- `material_design_icons_flutter`: Material Design icons
+- `flutter_spinkit`: Loading animations
+- `fluttertoast`: Toast messages
+- `fl_chart`: Charts and graphs
+
+### Utility Dependencies
+- `intl`: Internationalization
+- `permission_handler`: Permissions
+- `url_launcher`: URL launching
+- `image_picker`: Image selection
+- `file_picker`: File selection
 
 ## Contributing
 
@@ -196,7 +241,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For support and questions:
 - Create an issue in the repository
 - Contact the development team
-- Check the documentation wiki
+- Check the documentation
 
 ## Changelog
 
