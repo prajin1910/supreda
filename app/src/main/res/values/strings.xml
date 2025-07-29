@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">SmartEval</string>
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Sign in to your SmartEval account</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join SmartEval today</string>
+    <string name="otp_title">Verify Your Email</string>
+    <string name="email_hint">Email Address</string>
+    <string name="password_hint">Password</string>
+    <string name="username_hint">Username</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="professor_email_hint">Professor Email (for verification)</string>
+    <string name="otp_hint">Verification Code</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign up</string>
+    <string name="create_account">Create Account</string>
+    <string name="verify_account">Verify Account</string>
+    <string name="resend_otp">Didn\'t receive code? Resend</string>
+    <string name="back_to_registration">Back to Registration</string>
+    <string name="logout">Logout</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="assessments">Assessments</string>
+    <string name="tasks">Tasks</string>
+    <string name="ai_roadmap">AI Roadmap</string>
+    <string name="ai_practice">AI Practice</string>
+    <string name="chat">Chat</string>
+    <string name="alumni_management">Alumni Management</string>
+    <string name="analytics">Analytics</string>
+    <string name="student_role">Student</string>
+    <string name="professor_role">Professor</string>
+    <string name="alumni_role">Alumni</string>
+</resources>
