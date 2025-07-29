@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Clock, CheckCircle, AlertTriangle, Edit, Trash2, Play, Pause, RotateCcw } from 'lucide-react';
+import { Plus, Calendar, Clock, CheckCircle, AlertTriangle, Edit, Trash2, Play, Pause, RotateCcw, X } from 'lucide-react';
 import { taskAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { Task, TaskStats } from '../../types';
@@ -10,16 +10,26 @@ const TaskManagementSection: React.FC = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [tasksDueSoon, setTasksDueSoon] = useState<Task[]>([]);
   const [stats, setStats] = useState<TaskStats>({ pending: 0, ongoing: 0, completed: 0, overdue: 0 });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'ongoing' | 'completed' | 'overdue'>('all');
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [showDueSoonAlert, setShowDueSoonAlert] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchTasks();
       fetchStats();
+      fetchTasksDueSoon();
+      
+      // Set up interval to check for due soon tasks every 5 minutes
+      const interval = setInterval(() => {
+        fetchTasksDueSoon();
+      }, 5 * 60 * 1000);
+      
+      return () => clearInterval(interval);
     }
   }, [user]);
 
@@ -45,6 +55,21 @@ const TaskManagementSection: React.FC = () => {
       setStats(response.data);
     } catch (error) {
       console.error('Failed to fetch task stats');
+    }
+  };
+
+  const fetchTasksDueSoon = async () => {
+    try {
+      const response = await taskAPI.getDueSoon(user!.id);
+      const dueSoonTasks = response.data;
+      setTasksDueSoon(dueSoonTasks);
+      
+      // Show alert if there are tasks due soon
+      if (dueSoonTasks.length > 0) {
+        setShowDueSoonAlert(true);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tasks due soon');
     }
   };
 
@@ -314,6 +339,43 @@ const TaskManagementSection: React.FC = () => {
 
   return (
     <div className="p-8">
+      {/* Due Soon Alert */}
+      {showDueSoonAlert && tasksDueSoon.length > 0 && (
+        <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+          <div className="flex justify-between items-start">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Tasks Due Soon!
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>You have {tasksDueSoon.length} task(s) due within the next 24 hours:</p>
+                  <ul className="mt-2 list-disc list-inside">
+                    {tasksDueSoon.slice(0, 3).map((task) => (
+                      <li key={task.id}>
+                        <strong>{task.title}</strong> - Due: {new Date(task.endDateTime).toLocaleString()}
+                      </li>
+                    ))}
+                    {tasksDueSoon.length > 3 && (
+                      <li>...and {tasksDueSoon.length - 3} more</li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowDueSoonAlert(false)}
+              className="text-yellow-400 hover:text-yellow-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Task Management</h1>

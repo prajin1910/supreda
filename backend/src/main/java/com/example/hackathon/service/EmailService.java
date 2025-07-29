@@ -32,4 +32,28 @@ public class EmailService {
         
         emailSender.send(message);
     }
+
+    public void sendTaskReminder(String to, String studentName, String taskTitle, String taskDescription, String timeRemaining, String dueDate) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("noreply@smarteval.com");
+        message.setTo(to);
+        message.setSubject("SmartEval - Task Reminder: " + taskTitle);
+        
+        StringBuilder messageText = new StringBuilder();
+        messageText.append("Dear ").append(studentName).append(",\n\n");
+        messageText.append("This is a reminder that your task \"").append(taskTitle).append("\" is due soon.\n\n");
+        messageText.append("Task Details:\n");
+        messageText.append("Title: ").append(taskTitle).append("\n");
+        if (taskDescription != null && !taskDescription.trim().isEmpty()) {
+            messageText.append("Description: ").append(taskDescription).append("\n");
+        }
+        messageText.append("Due Date: ").append(dueDate).append("\n");
+        messageText.append("Time Remaining: ").append(timeRemaining).append("\n\n");
+        messageText.append("Please complete your task before the deadline.\n\n");
+        messageText.append("Best regards,\n");
+        messageText.append("SmartEval Team");
+        
+        message.setText(messageText.toString());
+        emailSender.send(message);
+    }
 }

@@ -49,6 +49,7 @@ export const chatAPI = {
   getMessages: (userId1: string, userId2: string) => 
     api.get(`/chat/messages/${userId1}/${userId2}`),
   findUser: (query: string) => api.get(`/users/search?q=${query}`),
+  getConversations: (userId: string) => api.get(`/chat/conversations/${userId}`),
 };
 
 export const aiAPI = {
@@ -77,6 +78,7 @@ export const taskAPI = {
     api.put(`/tasks/${taskId}/status?studentId=${studentId}&status=${status}`),
   getStats: (studentId: string) => api.get(`/tasks/student/${studentId}/stats`),
   getOverdue: (studentId: string) => api.get(`/tasks/student/${studentId}/overdue`),
+  getDueSoon: (studentId: string) => api.get(`/tasks/student/${studentId}/due-soon`),
 };
 
 export default api;

@@ -20,6 +20,7 @@ public class Task {
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
     private LocalDateTime completedAt;
+    private boolean reminderSent = false;
 
     public enum TaskStatus {
         PENDING, ONGOING, COMPLETED
@@ -80,4 +81,7 @@ public class Task {
 
     public LocalDateTime getCompletedAt() { return completedAt; }
     public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
+
+    public boolean isReminderSent() { return reminderSent; }
+    public void setReminderSent(boolean reminderSent) { this.reminderSent = reminderSent; }
 }

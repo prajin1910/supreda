@@ -9,6 +9,7 @@ interface ChatUser extends UserType {
   lastMessage?: string;
   lastMessageTime?: Date;
   unreadCount?: number;
+  isLastMessageFromMe?: boolean;
 }
 
 const ChatSection: React.FC = () => {
@@ -33,13 +34,29 @@ const ChatSection: React.FC = () => {
 
   useEffect(() => {
     loadChatUsers();
+    
+    // Set up polling for real-time updates every 3 seconds
+    const interval = setInterval(() => {
+      loadChatUsers();
+    }, 3000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const loadChatUsers = async () => {
     try {
-      // This would typically load users who have had conversations with the current user
-      // For now, we'll simulate this with an empty array
-      setChatUsers([]);
+      const response = await chatAPI.getConversations(user!.id);
+      const conversations = response.data.map((conv: any) => ({
+        id: conv.id,
+        username: conv.username,
+        email: conv.email,
+        role: conv.role,
+        lastMessage: conv.lastMessage,
+        lastMessageTime: new Date(conv.lastMessageTime),
+        unreadCount: conv.unreadCount,
+        isLastMessageFromMe: conv.isLastMessageFromMe,
+      }));
+      setChatUsers(conversations);
     } catch (error) {
       console.error('Failed to load chat users');
     }
@@ -69,11 +86,8 @@ const ChatSection: React.FC = () => {
       const response = await chatAPI.getMessages(user!.id, targetUser.id);
       setMessages(response.data);
       
-      // Add to chat users if not already present
-      const existingUser = chatUsers.find(u => u.id === targetUser.id);
-      if (!existingUser) {
-        setChatUsers(prev => [targetUser, ...prev]);
-      }
+      // Refresh conversations to update unread counts
+      loadChatUsers();
     } catch (error) {
       toast.error('Failed to load messages');
     }
@@ -102,15 +116,8 @@ const ChatSection: React.FC = () => {
       setMessages([...messages, newMsg]);
       setNewMessage('');
       
-      // Update chat users list
-      setChatUsers(prev => {
-        const updated = prev.filter(u => u.id !== selectedUser.id);
-        return [{
-          ...selectedUser,
-          lastMessage: newMessage.trim(),
-          lastMessageTime: new Date(),
-        }, ...updated];
-      });
+      // Refresh conversations to show the new message
+      loadChatUsers();
       
       toast.success('Message sent!');
     } catch (error) {
@@ -182,7 +189,19 @@ const ChatSection: React.FC = () => {
                           <div>
                             <p className="font-medium text-gray-900 text-sm">{searchUser.username}</p>
                             <p className="text-xs text-gray-600">{searchUser.role}</p>
-                          </div>
+                              {chatUser.lastMessage ? (
+                                <span>
+                                  {chatUser.isLastMessageFromMe && <span className="text-blue-600">You: </span>}
+                                  {chatUser.lastMessage}
+                                </span>
+                              ) : (
+                                `${chatUser.role} • Start a conversation`
+                              )}
+                          {chatUser.unreadCount && chatUser.unreadCount > 0 && (
+                            <div className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                              {chatUser.unreadCount}
+                            </div>
+                          )}
                         </div>
                       </button>
                     ))}

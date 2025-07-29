@@ -130,4 +130,10 @@ public class TaskController {
         List<TaskResponse> tasks = taskService.getOverdueTasks(studentId);
         return ResponseEntity.ok(tasks);
     }
+
+    @GetMapping("/student/{studentId}/due-soon")
+    public ResponseEntity<List<TaskResponse>> getTasksDueSoon(@PathVariable String studentId) {
+        List<TaskResponse> tasks = taskService.getTasksDueSoon(studentId);
+        return ResponseEntity.ok(tasks);
+    }
 }

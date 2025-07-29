@@ -84,3 +84,14 @@ export interface TaskStats {
   completed: number;
   overdue: number;
 }
+
+export interface ChatConversation {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  lastMessage?: string;
+  lastMessageTime?: Date;
+  unreadCount?: number;
+  isLastMessageFromMe?: boolean;
+}

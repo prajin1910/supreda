@@ -4,6 +4,7 @@ import com.example.hackathon.dto.TaskRequest;
 import com.example.hackathon.dto.TaskResponse;
 import com.example.hackathon.model.Task;
 import com.example.hackathon.repository.TaskRepository;
+import com.example.hackathon.service.TaskReminderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,9 @@ public class TaskService {
 
     @Autowired
     private TaskRepository taskRepository;
+
+    @Autowired
+    private TaskReminderService taskReminderService;
 
     public TaskResponse createTask(String studentId, TaskRequest request) {
         Task task = new Task();
@@ -150,6 +154,13 @@ public class TaskService {
     public List<TaskResponse> getOverdueTasks(String studentId) {
         List<Task> tasks = taskRepository.findByStudentIdAndEndDateTimeBeforeAndStatusNot(
             studentId, LocalDateTime.now(), Task.TaskStatus.COMPLETED);
+        return tasks.stream()
+                .map(TaskResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<TaskResponse> getTasksDueSoon(String studentId) {
+        List<Task> tasks = taskReminderService.getTasksDueSoon(studentId);
         return tasks.stream()
                 .map(TaskResponse::new)
                 .collect(Collectors.toList());

@@ -2,6 +2,7 @@ package com.example.hackathon.repository;
 
 import com.example.hackathon.model.Task;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -14,4 +15,10 @@ public interface TaskRepository extends MongoRepository<Task, String> {
     List<Task> findByStudentIdAndStartDateTimeBetween(String studentId, LocalDateTime start, LocalDateTime end);
     List<Task> findByStudentIdAndEndDateTimeBeforeAndStatusNot(String studentId, LocalDateTime dateTime, Task.TaskStatus status);
     long countByStudentIdAndStatus(String studentId, Task.TaskStatus status);
+    
+    @Query("{'endDateTime': {'$gte': ?0, '$lte': ?1}, 'status': {'$ne': 'COMPLETED'}, 'reminderSent': {'$ne': true}}")
+    List<Task> findTasksDueWithin24Hours(LocalDateTime now, LocalDateTime twentyFourHoursLater);
+    
+    @Query("{'studentId': ?0, 'endDateTime': {'$gte': ?1, '$lte': ?2}, 'status': {'$ne': 'COMPLETED'}}")
+    List<Task> findTasksDueSoonForStudent(String studentId, LocalDateTime now, LocalDateTime twentyFourHoursLater);
 }
