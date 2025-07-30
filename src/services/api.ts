@@ -41,7 +41,9 @@ export const assessmentAPI = {
     api.post(`/assessments/${assessmentId}/submit`, submissionData),
   getResults: (assessmentId: string) => api.get(`/assessments/${assessmentId}/results`),
   getStudentResults: (studentId: string) => api.get(`/assessments/results/student/${studentId}`),
-  getStatus: (assessmentId: string) => api.get(`/assessments/${assessmentId}/status`),
+  getAssessmentStatus: (assessmentId: string) => api.get(`/assessments/${assessmentId}/status`),
+  checkSubmission: (assessmentId: string, studentId: string) => 
+    api.get(`/assessments/${assessmentId}/submission/${studentId}`),
 };
 
 export const chatAPI = {

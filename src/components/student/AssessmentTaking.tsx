@@ -19,19 +19,33 @@ const AssessmentTaking: React.FC<AssessmentTakingProps> = ({ assessment, onCompl
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Calculate time remaining
-    const endTime = new Date(assessment.endTime).getTime();
+    // Calculate time remaining with proper timezone handling
+    const endTime = new Date(assessment.endTime);
+    const startTime = new Date(assessment.startTime);
     const now = new Date().getTime();
-    const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+    const endTimeMs = endTime.getTime();
+    
+    console.log('Assessment timing:', {
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      currentTime: new Date().toISOString(),
+      endTimeMs,
+      now
+    });
+    
+    const remaining = Math.max(0, Math.floor((endTimeMs - now) / 1000));
     setTimeRemaining(remaining);
 
     if (remaining <= 0) {
+      console.log('Time expired, auto-submitting assessment');
       submitAssessment();
       return;
     }
+    
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
+          console.log('Timer expired, auto-submitting assessment');
           submitAssessment();
           return 0;
         }
@@ -74,6 +88,8 @@ const AssessmentTaking: React.FC<AssessmentTakingProps> = ({ assessment, onCompl
   const submitAssessment = async () => {
     if (isSubmitting) return; // Prevent double submission
     
+    console.log('Submitting assessment with answers:', answers);
+    
     setIsSubmitting(true);
     try {
       await assessmentAPI.submit(assessment.id, {
@@ -83,6 +99,7 @@ const AssessmentTaking: React.FC<AssessmentTakingProps> = ({ assessment, onCompl
       toast.success('Assessment submitted successfully!');
       onComplete();
     } catch (error) {
+      console.error('Assessment submission error:', error);
       toast.error('Failed to submit assessment. Please try again.');
       setIsSubmitting(false);
     } finally {

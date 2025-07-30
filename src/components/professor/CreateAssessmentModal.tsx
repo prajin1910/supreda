@@ -92,13 +92,20 @@ const CreateAssessmentModal: React.FC<CreateAssessmentModalProps> = ({ onClose, 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate dates - use the datetime-local values directly
+    // Validate dates
+    if (!formData.startTime || !formData.endTime) {
+      alert('Please select both start and end times');
+      return;
+    }
+    
     const startTime = new Date(formData.startTime);
     const endTime = new Date(formData.endTime);
     const now = new Date();
     
-    if (startTime <= now) {
-      alert('Start time must be in the future');
+    // Allow scheduling assessments that start within the next 5 minutes for testing
+    const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+    if (startTime < fiveMinutesFromNow) {
+      alert('Start time must be at least 5 minutes in the future');
       return;
     }
     
@@ -107,17 +114,53 @@ const CreateAssessmentModal: React.FC<CreateAssessmentModalProps> = ({ onClose, 
       return;
     }
     
+    // Minimum duration check (at least 10 minutes)
+    const durationMs = endTime.getTime() - startTime.getTime();
+    const durationMinutes = durationMs / (1000 * 60);
+    if (durationMinutes < 10) {
+      alert('Assessment duration must be at least 10 minutes');
+      return;
+    }
+    
     if (formData.assignedStudents.length === 0) {
       alert('Please assign at least one student');
       return;
     }
     
+    if (questions.length === 0) {
+      alert('Please add at least one question');
+      return;
+    }
+    
+    // Validate all questions have content and options
+    for (let i = 0; i < questions.length; i++) {
+      const question = questions[i];
+      if (!question.questionText.trim()) {
+        alert(`Question ${i + 1} is missing question text`);
+        return;
+      }
+      
+      for (let j = 0; j < question.options.length; j++) {
+        if (!question.options[j].trim()) {
+          alert(`Question ${i + 1}, Option ${String.fromCharCode(65 + j)} is empty`);
+          return;
+        }
+      }
+    }
+    
     const assessment = {
       ...formData,
       questions: questions.map((q, index) => ({ ...q, id: `q${index}` })),
-      startTime: convertToISOString(formData.startTime),
-      endTime: convertToISOString(formData.endTime),
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
     };
+    
+    console.log('Creating assessment with times:', {
+      startTime: assessment.startTime,
+      endTime: assessment.endTime,
+      localStartTime: formData.startTime,
+      localEndTime: formData.endTime
+    });
     
     onSubmit(assessment);
   };
@@ -211,6 +254,7 @@ const CreateAssessmentModal: React.FC<CreateAssessmentModalProps> = ({ onClose, 
               <div className="text-sm text-blue-700">
                 <p>Start: {formData.startTime ? new Date(formData.startTime).toLocaleString() : 'Not set'}</p>
                 <p>End: {formData.endTime ? new Date(formData.endTime).toLocaleString() : 'Not set'}</p>
+                <p>Current Time: {new Date().toLocaleString()}</p>
                 {(() => {
                   if (formData.startTime && formData.endTime) {
                     const start = new Date(formData.startTime);
@@ -219,7 +263,14 @@ const CreateAssessmentModal: React.FC<CreateAssessmentModalProps> = ({ onClose, 
                     if (diffMs > 0) {
                       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
                       const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                      return <p className="font-medium">Duration: {diffHours}h {diffMinutes}m</p>;
+                      return (
+                        <div>
+                          <p className="font-medium">Duration: {diffHours}h {diffMinutes}m</p>
+                          <p className="text-xs mt-1">
+                            Time until start: {Math.max(0, Math.floor((start.getTime() - new Date().getTime()) / (1000 * 60)))} minutes
+                          </p>
+                        </div>
+                      );
                     }
                   }
                   return null;

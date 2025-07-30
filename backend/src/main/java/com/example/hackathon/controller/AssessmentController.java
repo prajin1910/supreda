@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -129,7 +131,21 @@ public class AssessmentController {
                 return ResponseEntity.badRequest()
                         .body(new ApiResponse(false, "Assessment not found!"));
             }
-            return ResponseEntity.ok(assessmentOpt.get());
+            
+            Assessment assessment = assessmentOpt.get();
+            
+            // Update assessment status based on current time
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isBefore(assessment.getStartTime())) {
+                assessment.setStatus(Assessment.AssessmentStatus.SCHEDULED);
+            } else if (now.isAfter(assessment.getStartTime()) && now.isBefore(assessment.getEndTime())) {
+                assessment.setStatus(Assessment.AssessmentStatus.ONGOING);
+            } else if (now.isAfter(assessment.getEndTime())) {
+                assessment.setStatus(Assessment.AssessmentStatus.COMPLETED);
+            }
+            
+            assessmentRepository.save(assessment);
+            return ResponseEntity.ok(assessment);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, "Failed to get assessment: " + e.getMessage()));
@@ -140,8 +156,26 @@ public class AssessmentController {
     public ResponseEntity<?> checkSubmission(@PathVariable String assessmentId, @PathVariable String studentId) {
         try {
             AssessmentResult result = assessmentResultRepository.findByAssessmentIdAndStudentId(assessmentId, studentId);
+            
+            // Get assessment to check timing
+            Optional<Assessment> assessmentOpt = assessmentRepository.findById(assessmentId);
+            if (!assessmentOpt.isPresent()) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(false, "Assessment not found!"));
+            }
+            
+            Assessment assessment = assessmentOpt.get();
+            LocalDateTime now = LocalDateTime.now();
+            
             Map<String, Object> response = new HashMap<>();
             response.put("hasSubmitted", result != null);
+            response.put("isAvailable", now.isAfter(assessment.getStartTime()) && now.isBefore(assessment.getEndTime()));
+            response.put("hasStarted", now.isAfter(assessment.getStartTime()));
+            response.put("hasEnded", now.isAfter(assessment.getEndTime()));
+            response.put("currentTime", now.toString());
+            response.put("startTime", assessment.getStartTime().toString());
+            response.put("endTime", assessment.getEndTime().toString());
+            
             if (result != null) {
                 response.put("submissionTime", result.getCompletedAt());
                 response.put("score", result.getScore());
@@ -153,6 +187,41 @@ public class AssessmentController {
         }
     }
 
+    @GetMapping("/{assessmentId}/status")
+    public ResponseEntity<?> getAssessmentStatus(@PathVariable String assessmentId) {
+        try {
+            Optional<Assessment> assessmentOpt = assessmentRepository.findById(assessmentId);
+            if (!assessmentOpt.isPresent()) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse(false, "Assessment not found!"));
+            }
+            
+            Assessment assessment = assessmentOpt.get();
+            LocalDateTime now = LocalDateTime.now();
+            
+            Map<String, Object> response = new HashMap<>();
+            
+            if (now.isBefore(assessment.getStartTime())) {
+                response.put("status", "SCHEDULED");
+                response.put("message", "Assessment has not started yet");
+            } else if (now.isAfter(assessment.getStartTime()) && now.isBefore(assessment.getEndTime())) {
+                response.put("status", "ONGOING");
+                response.put("message", "Assessment is currently available");
+            } else {
+                response.put("status", "COMPLETED");
+                response.put("message", "Assessment time has ended");
+            }
+            
+            response.put("currentTime", now.toString());
+            response.put("startTime", assessment.getStartTime().toString());
+            response.put("endTime", assessment.getEndTime().toString());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, "Failed to get assessment status: " + e.getMessage()));
+        }
+    }
     @GetMapping("/{assessmentId}/results-with-students")
     public ResponseEntity<?> getAssessmentResultsWithStudents(@PathVariable String assessmentId) {
         try {

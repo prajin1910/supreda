@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class HackathonApplication {
     public static void main(String[] args) {
+        // Set timezone to UTC for consistent time handling
+        System.setProperty("user.timezone", "UTC");
         SpringApplication.run(HackathonApplication.class, args);
     }
 }

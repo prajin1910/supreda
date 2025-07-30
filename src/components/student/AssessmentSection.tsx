@@ -56,7 +56,7 @@ const AssessmentSection: React.FC = () => {
 
   const checkAssessmentStatus = async (assessmentId: string) => {
     try {
-      const response = await assessmentAPI.getStatus(assessmentId);
+      const response = await assessmentAPI.getAssessmentStatus(assessmentId);
       return response.data.status;
     } catch (error) {
       console.error('Failed to check assessment status');
@@ -64,11 +64,28 @@ const AssessmentSection: React.FC = () => {
     }
   };
 
+  const checkAssessmentAvailability = async (assessmentId: string) => {
+    try {
+      const response = await assessmentAPI.checkSubmission(assessmentId, user!.id);
+      return {
+        isAvailable: response.data.isAvailable,
+        hasStarted: response.data.hasStarted,
+        hasEnded: response.data.hasEnded,
+        hasSubmitted: response.data.hasSubmitted,
+        currentTime: response.data.currentTime,
+        startTime: response.data.startTime,
+        endTime: response.data.endTime
+      };
+    } catch (error) {
+      console.error('Failed to check assessment availability');
+      return null;
+    }
+  };
   const categorizeAssessments = () => {
     const now = currentTime;
     return {
       current: assessments.filter(a => 
-        new Date(a.startTime) <= now && new Date(a.endTime) >= now
+        new Date(a.startTime) <= now && new Date(a.endTime) > now
       ),
       past: assessments.filter(a => new Date(a.endTime) < now),
       future: assessments.filter(a => new Date(a.startTime) > now),
@@ -110,7 +127,6 @@ const AssessmentSection: React.FC = () => {
 
   const getTimeUntilStart = (assessment: Assessment) => {
     const now = currentTime;
-    // Parse the ISO string properly
     const start = new Date(assessment.startTime);
     const diff = start.getTime() - now.getTime();
     
@@ -122,12 +138,12 @@ const AssessmentSection: React.FC = () => {
     
     if (days > 0) return `${days}d ${hours}h`;
     if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
+    if (minutes > 0) return `${minutes}m`;
+    return 'Starting soon';
   };
 
   const getTimeRemaining = (assessment: Assessment) => {
     const now = currentTime;
-    // Parse the ISO string properly
     const end = new Date(assessment.endTime);
     const diff = end.getTime() - now.getTime();
     
@@ -137,7 +153,8 @@ const AssessmentSection: React.FC = () => {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
     if (hours > 0) return `${hours}h ${minutes}m remaining`;
-    return `${minutes}m remaining`;
+    if (minutes > 0) return `${minutes}m remaining`;
+    return 'Ending soon';
   };
   const startAssessment = async (assessment: Assessment) => {
     if (hasSubmittedAssessment(assessment.id)) {
@@ -145,14 +162,36 @@ const AssessmentSection: React.FC = () => {
       return;
     }
     
-    // Double-check with server
-    const status = await checkAssessmentStatus(assessment.id);
-    if (status === 'ONGOING' && isAssessmentAvailable(assessment)) {
+    // Check real-time availability with server
+    const availability = await checkAssessmentAvailability(assessment.id);
+    
+    if (!availability) {
+      toast.error('Failed to check assessment availability');
+      return;
+    }
+    
+    console.log('Assessment availability check:', availability);
+    
+    if (availability.hasSubmitted) {
+      toast.error('You have already submitted this assessment');
+      return;
+    }
+    
+    if (!availability.hasStarted) {
+      const startTime = new Date(availability.startTime).toLocaleString();
+      toast.error(`Assessment has not started yet. It will start at ${startTime}`);
+      return;
+    }
+    
+    if (availability.hasEnded) {
+      const endTime = new Date(availability.endTime).toLocaleString();
+      toast.error(`Assessment time has ended at ${endTime}`);
+      return;
+    }
+    
+    if (availability.isAvailable) {
       setTakingAssessment(assessment);
-    } else if (status === 'COMPLETED' || new Date(assessment.endTime) < currentTime) {
-      toast.error('Assessment time has ended');
-    } else if (status === 'UPCOMING' || new Date(assessment.startTime) > currentTime) {
-      toast.error('Assessment has not started yet');
+      toast.success('Assessment started successfully!');
     } else {
       toast.error('Assessment is not currently available');
     }
