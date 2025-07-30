@@ -118,11 +118,11 @@ const AssessmentManagement: React.FC = () => {
               <div className="space-y-2 mb-4 text-sm text-gray-600">
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-2" />
-                  {new Date(assessment.startTime).toLocaleDateString()}
+                  Start: {new Date(assessment.startTime).toLocaleDateString()} at {new Date(assessment.startTime).toLocaleTimeString()}
                 </div>
                 <div className="flex items-center">
                   <Clock className="w-4 h-4 mr-2" />
-                  {new Date(assessment.startTime).toLocaleTimeString()} - {new Date(assessment.endTime).toLocaleTimeString()}
+                  End: {new Date(assessment.endTime).toLocaleDateString()} at {new Date(assessment.endTime).toLocaleTimeString()}
                 </div>
                 <div className="flex items-center">
                   <Users className="w-4 h-4 mr-2" />

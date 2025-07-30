@@ -110,6 +110,7 @@ const AssessmentSection: React.FC = () => {
 
   const getTimeUntilStart = (assessment: Assessment) => {
     const now = currentTime;
+    // Parse the ISO string properly
     const start = new Date(assessment.startTime);
     const diff = start.getTime() - now.getTime();
     
@@ -126,6 +127,7 @@ const AssessmentSection: React.FC = () => {
 
   const getTimeRemaining = (assessment: Assessment) => {
     const now = currentTime;
+    // Parse the ISO string properly
     const end = new Date(assessment.endTime);
     const diff = end.getTime() - now.getTime();
     
@@ -193,12 +195,13 @@ const AssessmentSection: React.FC = () => {
       <div className="flex items-center text-gray-600 text-sm space-x-4 mb-4">
         <div className="flex items-center">
           <Calendar className="w-4 h-4 mr-1" />
-          {new Date(assessment.startTime).toLocaleDateString()}
+          {new Date(assessment.startTime).toLocaleDateString()} at {new Date(assessment.startTime).toLocaleTimeString()}
         </div>
-        <div className="flex items-center">
-          <Clock className="w-4 h-4 mr-1" />
-          {new Date(assessment.startTime).toLocaleTimeString()} - {new Date(assessment.endTime).toLocaleTimeString()}
-        </div>
+      </div>
+      
+      <div className="flex items-center text-gray-600 text-sm mb-4">
+        <Clock className="w-4 h-4 mr-1" />
+        <span>Ends: {new Date(assessment.endTime).toLocaleDateString()} at {new Date(assessment.endTime).toLocaleTimeString()}</span>
       </div>
       
       {/* Time Information */}
