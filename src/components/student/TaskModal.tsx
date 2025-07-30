@@ -95,11 +95,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onSubmit }) => {
       return;
     }
     
+    // Convert datetime-local values to ISO strings properly
     const taskData = {
       title: formData.title.trim(),
       description: formData.description.trim(),
-      startDateTime: new Date(formData.startDateTime).toISOString(),
-      endDateTime: new Date(formData.endDateTime).toISOString(),
+      startDateTime: formData.startDateTime ? new Date(formData.startDateTime).toISOString() : '',
+      endDateTime: formData.endDateTime ? new Date(formData.endDateTime).toISOString() : '',
       priority: formData.priority,
     };
     

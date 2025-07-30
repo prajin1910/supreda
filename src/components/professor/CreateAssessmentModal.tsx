@@ -24,6 +24,23 @@ const CreateAssessmentModal: React.FC<CreateAssessmentModalProps> = ({ onClose, 
   ]);
   const [studentInput, setStudentInput] = useState('');
 
+  // Helper function to format date for datetime-local input
+  const formatDateTimeLocal = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  // Helper function to convert datetime-local input to ISO string
+  const convertToISOString = (dateTimeLocal: string) => {
+    if (!dateTimeLocal) return '';
+    // Create date object from the local datetime string
+    const date = new Date(dateTimeLocal);
+    return date.toISOString();
+  };
   const addQuestion = () => {
     setQuestions([...questions, {
       questionText: '',
@@ -75,7 +92,7 @@ const CreateAssessmentModal: React.FC<CreateAssessmentModalProps> = ({ onClose, 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate dates
+    // Validate dates - use the datetime-local values directly
     const startTime = new Date(formData.startTime);
     const endTime = new Date(formData.endTime);
     const now = new Date();
@@ -98,8 +115,8 @@ const CreateAssessmentModal: React.FC<CreateAssessmentModalProps> = ({ onClose, 
     const assessment = {
       ...formData,
       questions: questions.map((q, index) => ({ ...q, id: `q${index}` })),
-      startTime: startTime.toISOString(),
-      endTime: endTime.toISOString(),
+      startTime: convertToISOString(formData.startTime),
+      endTime: convertToISOString(formData.endTime),
     };
     
     onSubmit(assessment);
@@ -154,30 +171,62 @@ const CreateAssessmentModal: React.FC<CreateAssessmentModalProps> = ({ onClose, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Start Time
+                Start Date & Time
               </label>
               <input
                 type="datetime-local"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                step="60"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Select the exact date and time when the assessment should start
+              </p>
             </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                End Time
+                End Date & Time
               </label>
               <input
                 type="datetime-local"
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                step="60"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Select the exact date and time when the assessment should end
+              </p>
             </div>
           </div>
+
+          {/* Duration Display */}
+          {formData.startTime && formData.endTime && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-blue-800 mb-2">Assessment Duration</h4>
+              <div className="text-sm text-blue-700">
+                <p>Start: {formData.startTime ? new Date(formData.startTime).toLocaleString() : 'Not set'}</p>
+                <p>End: {formData.endTime ? new Date(formData.endTime).toLocaleString() : 'Not set'}</p>
+                {(() => {
+                  if (formData.startTime && formData.endTime) {
+                    const start = new Date(formData.startTime);
+                    const end = new Date(formData.endTime);
+                    const diffMs = end.getTime() - start.getTime();
+                    if (diffMs > 0) {
+                      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                      return <p className="font-medium">Duration: {diffHours}h {diffMinutes}m</p>;
+                    }
+                  }
+                  return null;
+                })()}
+              </div>
+            </div>
+          )}
 
           {/* Student Assignment */}
           <div>
